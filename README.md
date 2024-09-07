@@ -1,70 +1,107 @@
-# Getting Started with Create React App
+# Code Translator
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Code Translator is a Python and React-based web application that allows users to translate Python code segments into Java. The application leverages the OpenAI GPT-4 model to perform language translation, taking in Python code as input and generating equivalent Java code output.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- **Python to Java Translation**: Seamlessly translates Python code segments into Java using the OpenAI API.
+- **Segmentation**: Automatically divides Python code into logical segments such as imports, global variables, classes, functions, and the main block.
+- **REST API**: Exposes a `/api/translate` endpoint for sending Python code to the translator.
+- **React Frontend**: Provides a user-friendly interface for submitting Python code and receiving translated Java output.
+- **Flask Backend**: Powers the backend API, with support for CORS and OpenAI integration.
 
-### `npm start`
+## Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Backend**: Flask, OpenAI API, Python
+- **Frontend**: React, Axios, React Ace for code editing
+- **Libraries**: `flask-cors`, `dotenv`, `re` (Regex), `concurrently` for running the React and Flask servers simultaneously.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Installation and Setup
 
-### `npm test`
+### Prerequisites
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Ensure you have the following installed on your local machine:
 
-### `npm run build`
+- [Node.js](https://nodejs.org/)
+- [Python 3.8+](https://www.python.org/)
+- [OpenAI API Key](https://beta.openai.com/signup/) (Add this to your `.env` file)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Clone the Repository
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+git clone https://github.com/your-username/code-translator.git
+cd code-translator
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Backend (Python - Flask)
 
-### `npm run eject`
+1. Create a virtual environment and activate it:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+2. Install the required dependencies:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+3. Set up your environment variables:
 
-## Learn More
+   Create a `.env` file in the root directory and add the OpenAI API key:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+   ```bash
+   OPENAI_API_KEY=your-openai-api-key
+   ```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+4. Run the Flask server:
 
-### Code Splitting
+   ```bash
+   python app.py
+   ```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### Frontend (React)
 
-### Analyzing the Bundle Size
+1. Install the dependencies:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+   ```bash
+   npm install
+   ```
 
-### Making a Progressive Web App
+2. Start the React application:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+   ```bash
+   npm run start
+   ```
 
-### Advanced Configuration
+   This will start both the React and Flask servers simultaneously.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Running the Application
 
-### Deployment
+Once both the Flask and React servers are running, open your browser and navigate to:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+```
+http://localhost:3000
+```
 
-### `npm run build` fails to minify
+You can now enter Python code into the interface and receive Java translations.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## File Structure
+
+```
+code-translator/
+│
+├── app.py                # Flask API for code translation
+├── package.json          # NPM dependencies and scripts
+├── requirements.txt      # Python dependencies
+├── .env                  # OpenAI API Key file (not included in the repo)
+├── .gitignore            # Files to ignore in the repo
+├── README.md             # Project documentation
+└── src/                  # React frontend source code
+```
+
+## License
+
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
