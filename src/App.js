@@ -35,8 +35,8 @@ function App() {
                     mode="python"
                     theme="monokai"
                     name="pythonEditor"
-                    width="600px"
-                    height="400px"
+                    width="100%"  // Full width of the half container
+                    height="100%" // Full height of the half container
                     onChange={setPythonCode}
                     fontSize={14}
                     showPrintMargin={true}
@@ -58,8 +58,8 @@ function App() {
                     mode="java"
                     theme="monokai"
                     name="javaEditor"
-                    width="600px"
-                    height="400px"
+                    width="100%"  // Full width of the half container
+                    height="100%" // Full height of the half container
                     readOnly={true}
                     value={javaCode}
                     fontSize={14}

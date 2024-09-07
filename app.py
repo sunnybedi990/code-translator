@@ -14,7 +14,6 @@ CORS(app, resources={r"/api/translate": {"origins": ["http://localhost:3000"]}})
 
 # Initialize the OpenAI client with your API key
 client = OpenAI(
-    # This is the default and can be omitted
     api_key=os.environ.get("OPENAI_API_KEY"),
 )
 @app.route('/api/translate', methods=['POST', 'OPTIONS'])

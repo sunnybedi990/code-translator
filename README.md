@@ -2,6 +2,12 @@
 
 Code Translator is a Python and React-based web application that allows users to translate Python code segments into Java. The application leverages the OpenAI GPT-4 model to perform language translation, taking in Python code as input and generating equivalent Java code output.
 
+### Example Output
+
+The following is an example of what you can expect as output from the application:
+
+![Output Example](output/output.png)
+
 ## Features
 
 - **Python to Java Translation**: Seamlessly translates Python code segments into Java using the OpenAI API.
