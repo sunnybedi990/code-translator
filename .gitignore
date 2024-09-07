@@ -1,0 +1,67 @@
+# Node.js
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Installers
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+
+# C extensions
+*.so
+
+# pytest
+.cache/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+nox/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pyre/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
