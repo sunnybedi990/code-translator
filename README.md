@@ -2,7 +2,7 @@
 
 Code Translator is a Python and React-based web application that allows users to translate code between multiple programming languages. The application leverages various AI models, including OpenAI's GPT-4, to perform language translation. Users can select source and target languages, input code, and receive the translated output in the desired language.
 
-![Output Example](output/output.png)
+![Output Example](output/output_1.png)
 
 ## Features
 
