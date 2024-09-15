@@ -12,19 +12,39 @@ pipeline = transformers.pipeline(
     device_map="auto"
 )
 
-def translate_with_llama3(name, segment, from_language, to_language, relevant_context):
+def translate_with_llama3(name, segment, from_language, to_language, context):
     try:
-        prompt = f"""
-        You are a code translator. Translate the following {from_language} code into {to_language}.
-        Consider the following context: {relevant_context}
-        Ensure the {to_language} code is correctly formatted and enclosed in triple backticks.
+        if context:
+            # If context is provided, include it in the prompt
+            prompt = f"""
+            You are a code translator. Translate the following {from_language} code into {to_language}.
+            Use the provided context to ensure accurate translation. Ensure the {to_language} code is correctly formatted and enclosed in triple backticks.
 
-        ```{from_language}
-        {segment}
-        ```
+            Context:
+            ```{from_language}
+            {context}
+            ```
 
-        Please provide the {to_language} output:
-        """
+            Now translate the following {from_language} code:
+
+            ```{from_language}
+            {segment}
+            ```
+
+            Please provide the {to_language} output:
+            """
+        else:
+            # If no context is provided, use a simpler prompt
+            prompt = f"""
+            You are a code translator. Translate the following {from_language} code into {to_language}.
+            Ensure the {to_language} code is correctly formatted and enclosed in triple backticks.
+
+            ```{from_language}
+            {segment}
+            ```
+
+            Please provide the {to_language} output:
+            """
         response = pipeline(prompt)
         
         if response:

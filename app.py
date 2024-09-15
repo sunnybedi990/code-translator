@@ -6,36 +6,108 @@ from openai import OpenAI
 import os
 import re
 from translations import get_translator
-from segments import get_segments  # Import the get_segments function
+from segments import get_segments, extract_code_skeleton  # Import the get_segments function
+import tiktoken  # Library to count tokens
 
 
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
+MAX_TOKEN_LIMIT = 2000  # Define your token limit here
 
-def get_relevant_context(segment, context_map):
-    # Analyze the segment for class, method, or variable references
-    relevant_context = ""
-    if "class" in segment:
-        relevant_context += context_map.get("classes", "")
-    if "def" in segment or "function" in segment:
-        relevant_context += context_map.get("methods", "")
-    return relevant_context
+# Method 1 Sliding Window
+def sliding_window_translate(source_code: str, from_language: str, to_language: str, translator_func, window_size: int = 1500, overlap_size: int = 500):
+    """
+    Translates a large codebase using a sliding window approach for better context management.
+    
+    Args:
+        source_code (str): The original source code to translate.
+        from_language (str): The source programming language.
+        to_language (str): The target programming language.
+        translator_func: The function to call the selected translator API.
+        window_size (int): The number of tokens to include in each window.
+        overlap_size (int): The number of tokens to overlap between consecutive windows.
 
-def update_context_map(translated_segment, context_map):
-    # Extract class names, method signatures, and global variables from the translated segment
-    class_match = re.search(r'class\s+(\w+)', translated_segment)
-    if class_match:
-        context_map['classes'] = translated_segment  # Store the class in context
+    Returns:
+        str: The fully translated code.
+    """
+    enc = tiktoken.get_encoding("cl100k_base")
+    tokens = enc.encode(source_code)
+    
+    translated_code = ""
+    start_idx = 0
+    total_tokens = len(tokens)
+    
+    while start_idx < total_tokens:
+        end_idx = min(start_idx + window_size, total_tokens)  # Define window bounds
+        
+        # Extract the window's code, including the overlapping context
+        window_tokens = tokens[start_idx:end_idx]
+        window_code = enc.decode(window_tokens)
+        
+        # Translate the current window
+        translated_window = translator_func("Code Window", window_code, from_language, to_language)
+        translated_code += translated_window + "\n"
+        
+        # Slide the window by moving the start index forward
+        start_idx += (window_size - overlap_size)
+    
+    return translated_code.strip()
 
-    method_match = re.search(r'(public|private|protected)?\s+\w+\s+(\w+)\(', translated_segment)
-    if method_match:
-        context_map['methods'] = translated_segment  # Store the method in context
+# Method 2 Segmentation of Code
+def translate_code(source_code,from_language,to_language,translator):
+     # Tokenize the source code to estimate token count
+        enc = tiktoken.get_encoding("cl100k_base")  # Choose the encoding based on the model you're using
+        tokenized_code = enc.encode(source_code)
+        token_length = len(tokenized_code)
+        translated_code = ""
+
+        if token_length <= MAX_TOKEN_LIMIT:
+            # If the token length is below the limit, translate the full code
+            skeleton = extract_code_skeleton(source_code, from_language)
+            translated_code = translator('Full Code', source_code, from_language, to_language, skeleton)
+        else:
+            # If the token length exceeds the limit, segment the code
+            try:
+                segments, class_methods = get_segments(source_code, from_language)
+                skeleton = extract_code_skeleton(source_code, from_language)
+            except ValueError as e:
+                return jsonify({"error": str(e)}), 400
+
+            accumulated_context = skeleton  # Use the skeleton as the initial context
+
+            # Function to translate a segment with essential context
+            def translate_segment(name, segment, context):
+                return translator(name, segment, from_language, to_language, context)
+
+            # Iterate over the segments and translate each one
+            for name, segment in segments.items():
+                if isinstance(segment, str) and segment.strip():
+                    translated_segment = translate_segment(name, segment, accumulated_context)
+                    accumulated_context += translated_segment
+                    translated_code += translated_segment + "\n"
+                elif isinstance(segment, list) and segment:
+                    for idx, code_block in enumerate(segment, start=1):
+                        if code_block.strip():
+                            translated_segment = translate_segment(f"{name} {idx}", code_block, accumulated_context)
+                            accumulated_context += translated_segment
+                            translated_code += translated_segment + "\n"
+
+            # Translate class methods if any
+            for class_name, methods in class_methods.items():
+                for method in methods:
+                    translated_method = translate_segment(f"Method {class_name}.{method}", method, accumulated_context)
+                    accumulated_context += translated_method
+                    translated_code += translated_method + "\n"
+                    
+            return translated_code.strip()
+
+
 
 
 @app.route('/api/translate', methods=['POST', 'OPTIONS'])
-def translate_code():
+def translate_code_route():
     if request.method == 'OPTIONS':
         return '', 200
 
@@ -49,57 +121,20 @@ def translate_code():
 
         if not source_code:
             return jsonify({"error": "No code provided"}), 400
-
-        try:
-            # Segment the source code based on the source language
-            segments = get_segments(source_code, from_language)
-        except ValueError as e:
-            return jsonify({"error": str(e)}), 400
-        
+       
         translator = get_translator(selected_api)
         if not translator:
             return jsonify({"error": f"Unsupported API: {selected_api}"}), 400
-        
-        accumulated_context = ""  # Initialize an empty context to accumulate translated code
-        translated_code = ""
-        context_map = {}  # Initialize an empty map to store accumulated context
 
-        
-        # Function to translate a segment with essential context
-        def translate_segment(name, segment):
-            # Get the relevant context for the current segment
-            relevant_context = get_relevant_context(segment, context_map)
-            return translator(name, segment, from_language, to_language, relevant_context)
-
-
-        # Iterate over the segments and translate each one
-        for name, segment in segments.items():
-            if isinstance(segment, str) and segment.strip():
-                translated_segment = translate_segment(name, segment)
-                
-                # Update the context map after translating each segment
-                update_context_map(translated_segment, context_map)
-
-                # Append the translated segment to the overall translated code
-                translated_code += translated_segment + "\n"
-
-            elif isinstance(segment, list) and segment:
-                for idx, code_block in enumerate(segment, start=1):
-                    if code_block.strip():
-                        translated_segment = translate_segment(f"{name} {idx}", code_block)
-                        
-                        # Update the context map and accumulate translated segments
-                        update_context_map(translated_segment, context_map)
-                        translated_code += translated_segment + "\n"
-
-                            
-        print(translated_code)
-
+        translated_code = sliding_window_translate(source_code,from_language,to_language,translator)
+        #translated_code = translate_code(source_code,from_language,to_language,translator)
         # After processing the translated code
-        if translated_code.strip():  # Check if there's any translated code
+        if translated_code.strip():
             return jsonify({"translated_code": translated_code}), 200
         else:
-            return jsonify({"error": "Java code not found in the response"}), 404
+            return jsonify({"error": "Translation failed"}), 404
+    else:
+        return jsonify({"error": "Translation failed"}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0',debug=True, port=5000)

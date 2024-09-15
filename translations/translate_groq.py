@@ -6,30 +6,51 @@ import re
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-def translate_with_groq(name, segment, from_language, to_language, relevant_context):
+def translate_with_groq(name, segment, from_language, to_language, context):
     # Placeholder for Groq API integration
     # Replace with actual Groq API calls
     try:
-        prompt = f"""
-        You are a code translator. Translate the following {from_language} code into {to_language}.
-        Consider the following context: {relevant_context}
-        Ensure the {to_language} code is correctly formatted and enclosed in triple backticks.
+        if context:
+            # If context is provided, include it in the prompt
+            prompt = f"""
+            You are a code translator. Translate the following {from_language} code into {to_language}.
+            Use the provided context to ensure accurate translation. Ensure the {to_language} code is correctly formatted and enclosed in triple backticks.
 
-        ```{from_language}
-        {segment}
-        ```
+            Context:
+            ```{from_language}
+            {context}
+            ```
 
-        Please provide the {to_language} output:
-        """
+            Now translate the following {from_language} code:
+
+            ```{from_language}
+            {segment}
+            ```
+
+            Please provide the {to_language} output:
+            """
+        else:
+            # If no context is provided, use a simpler prompt
+            prompt = f"""
+            You are a code translator. Translate the following {from_language} code into {to_language}.
+            Ensure the {to_language} code is correctly formatted and enclosed in triple backticks.
+
+            ```{from_language}
+            {segment}
+            ```
+
+            Please provide the {to_language} output:
+            """
         response = client.chat.completions.create(
-            model="llama3-8b-8192",
+            model="llama-3.1-8b-instant",
             messages=[
-                    {"role": "system", "content": f"You are a code translator. Translate this segment of {from_language} code into {to_language}. Segment: {name}. Do not provide any explanations just provide the code."},
+                    {"role": "system", "content": f"You are a code translator. Translate this segment of {from_language} code into {to_language}. Do not provide any explanations just provide the code."},
                     {"role": "user", "content": prompt}
                 ],
             temperature=0.1,
             max_tokens=2000,
-            top_p=1
+            top_p=1,
+            stop = None
         )
         if response.choices:
             content = response.choices[0].message.content.strip()

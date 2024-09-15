@@ -1,5 +1,151 @@
 import re
+from typing import List, Tuple, Dict
 
+
+language_patterns = {
+        "python": {
+         "class": [re.compile(r'class\s+(\w+)')],  # List of patterns to match class definitions in Python
+        "method": [re.compile(r'def\s+(\w+)\(')],  # List of patterns to match method definitions in Python
+        "variable": [re.compile(r'^(\w+)\s*=')],  # List of patterns to match global variable declarations in Python
+
+
+        },
+        "java": {
+            "class": r'class\s+(\w+)',  # Pattern to match class definitions in Java
+            "method": r'(public|private|protected)?\s+\w+\s+(\w+)\(',  # Pattern to match method definitions in Java
+            "variable": r'(\w+)\s+\w+\s*;',  # Pattern to match variable declarations in Java
+        },
+        "csharp": {
+            "class": r'class\s+(\w+)',  # Pattern to match class definitions in C#
+            "method": r'(public|private|protected)?\s+\w+\s+(\w+)\(',  # Pattern to match method definitions in C#
+            "variable": r'(\w+)\s+\w+\s*;',  # Pattern to match variable declarations in C#
+        },
+        "javascript": {
+            "class": r'class\s+(\w+)',  # Pattern to match class definitions in JavaScript
+            "method": r'function\s+(\w+)\(',  # Pattern to match function definitions in JavaScript
+            "variable": r'(let|const|var)\s+(\w+)',  # Pattern to match variable declarations in JavaScript
+        },
+        "typescript": {
+            "class": r'class\s+(\w+)',  # Pattern to match class definitions in TypeScript
+            "method": r'(\w+)\s*\(.*?\)\s*{',  # Pattern to match function definitions in TypeScript
+            "variable": r'(let|const|var)\s+(\w+)',  # Pattern to match variable declarations in TypeScript
+        },
+        "php": {
+            "class": r'class\s+(\w+)',  # Pattern to match class definitions in PHP
+            "method": r'function\s+(\w+)\(',  # Pattern to match function definitions in PHP
+            "variable": r'\$(\w+)\s*=',  # Pattern to match variable declarations in PHP
+        },
+        "ruby": {
+            "class": r'class\s+(\w+)',  # Pattern to match class definitions in Ruby
+            "method": r'def\s+(\w+)\(',  # Pattern to match method definitions in Ruby
+            "variable": r'@(\w+)\s*=',  # Pattern to match instance variable declarations in Ruby
+        },
+        "go": {
+            "class": r'type\s+(\w+)\s+struct',  # Pattern to match struct definitions in Go (Go does not use classes)
+            "method": r'func\s+(\w+)\(',  # Pattern to match method/function definitions in Go
+            "variable": r'var\s+(\w+)',  # Pattern to match variable declarations in Go
+        },
+        "swift": {
+            "class": r'class\s+(\w+)',  # Pattern to match class definitions in Swift
+            "method": r'func\s+(\w+)\(',  # Pattern to match method definitions in Swift
+            "variable": r'(let|var)\s+(\w+)',  # Pattern to match variable declarations in Swift
+        },
+        "kotlin": {
+            "class": r'class\s+(\w+)',  # Pattern to match class definitions in Kotlin
+            "method": r'fun\s+(\w+)\(',  # Pattern to match method definitions in Kotlin
+            "variable": r'(val|var)\s+(\w+)',  # Pattern to match variable declarations in Kotlin
+        },
+        "c": {
+            "class": None,  # C does not have classes
+            "method": r'\w+\s+(\w+)\s*\(',  # Pattern to match function definitions in C
+            "variable": r'\w+\s+(\w+)\s*;',  # Pattern to match variable declarations in C
+        },
+        "cpp": {
+            "class": r'class\s+(\w+)',  # Pattern to match class definitions in C++
+            "method": r'\w+\s+(\w+)\s*\(',  # Pattern to match function definitions in C++
+            "variable": r'\w+\s+(\w+)\s*;',  # Pattern to match variable declarations in C++
+        },
+        "r": {
+            "class": None,  # R does not use classes in the same way as OOP languages
+            "method": r'(\w+)\s*<- function',  # Pattern to match function definitions in R
+            "variable": r'(\w+)\s*<-',  # Pattern to match variable assignments in R
+        },
+        "scala": {
+            "class": r'class\s+(\w+)',  # Pattern to match class definitions in Scala
+            "method": r'def\s+(\w+)\(',  # Pattern to match method definitions in Scala
+            "variable": r'val\s+(\w+)',  # Pattern to match value declarations in Scala
+        },
+        "rust": {
+            "class": r'struct\s+(\w+)',  # Pattern to match struct definitions in Rust
+            "method": r'fn\s+(\w+)\(',  # Pattern to match function definitions in Rust
+            "variable": r'let\s+(\w+)',  # Pattern to match variable declarations in Rust
+        },
+        "perl": {
+            "class": r'package\s+(\w+)',  # Pattern to match package definitions (Perl does not have classes natively)
+            "method": r'sub\s+(\w+)\s*{',  # Pattern to match function definitions in Perl
+            "variable": r'my\s+\$(\w+)',  # Pattern to match variable declarations in Perl
+        },
+        "bash": {
+            "class": None,  # Bash does not have classes
+            "method": r'function\s+(\w+)\s*\(\)',  # Pattern to match function definitions in Bash
+            "variable": r'(\w+)=',  # Pattern to match variable assignments in Bash
+        },
+        "haskell": {
+            "class": r'data\s+(\w+)',  # Pattern to match data type definitions (equivalent to classes) in Haskell
+            "method": r'(\w+)\s*::',  # Pattern to match function signatures in Haskell
+            "variable": r'(\w+)\s*=',  # Pattern to match variable declarations in Haskell
+        },
+        "elixir": {
+            "class": r'defmodule\s+(\w+)',  # Pattern to match module definitions (equivalent to classes) in Elixir
+            "method": r'def\s+(\w+)\(',  # Pattern to match function definitions in Elixir
+            "variable": r'(\w+)\s*=',  # Pattern to match variable declarations in Elixir
+        },
+        "erlang": {
+            "class": None,  # Erlang does not have classes
+            "method": r'(\w+)\s*\(',  # Pattern to match function definitions in Erlang
+            "variable": r'(\w+)\s*=',  # Pattern to match variable assignments in Erlang
+        },
+        "fortran": {
+            "class": r'module\s+(\w+)',  # Pattern to match module definitions (equivalent to classes) in Fortran
+            "method": r'subroutine\s+(\w+)',  # Pattern to match subroutine definitions in Fortran
+            "variable": r'(\w+)\s*::',  # Pattern to match variable declarations in Fortran
+        },
+        "lua": {
+            "class": None,  # Lua does not have classes natively
+            "method": r'function\s+(\w+)\(',  # Pattern to match function definitions in Lua
+            "variable": r'local\s+(\w+)',  # Pattern to match local variable declarations in Lua
+        },
+        "prolog": {
+            "class": None,  # Prolog does not have classes
+            "method": r'(\w+)\s*\(',  # Pattern to match predicate definitions in Prolog
+            "variable": r'(\w+)\s*=',  # Pattern to match variable assignments in Prolog
+        },
+        "tcl": {
+            "class": None,  # Tcl does not have classes
+            "method": r'proc\s+(\w+)\s*\{',  # Pattern to match procedure definitions in Tcl
+            "variable": r'set\s+(\w+)',  # Pattern to match variable assignments in Tcl
+        },
+        "racket": {
+            "class": r'(module\s+(\w+))',  # Pattern to match module definitions in Racket
+            "method": r'define\s+\(\s*(\w+)\s+',  # Pattern to match function definitions in Racket
+            "variable": r'define\s+(\w+)',  # Pattern to match variable definitions in Racket
+        },
+        "cobol": {
+            "class": None,  # COBOL does not have classes
+            "method": r'PROCEDURE\s+DIVISION',  # Pattern to match the start of a method in COBOL
+            "variable": r'(\w+)\s+PIC',  # Pattern to match variable declarations in COBOL
+        },
+        "objectivec": {
+            "class": r'@interface\s+(\w+)',  # Pattern to match class definitions in Objective-C
+            "method": r'[-|+]\s*\(.*?\)\s*(\w+)',  # Pattern to match method definitions in Objective-C
+            "variable": r'(\w+)\s*=\s*',  # Pattern to match variable declarations in Objective-C
+        },
+        "sql": {
+            "class": None,  # SQL does not have classes
+            "method": r'CREATE\s+PROCEDURE\s+(\w+)',  # Pattern to match stored procedure definitions in SQL
+            "variable": r'(\w+)\s+(INT|VARCHAR|CHAR|TEXT|DATE)',  # Pattern to match variable declarations in SQL
+        },
+    }
 def get_segments(source_code, language):
     segment_functions = {
     'python': segment_python_code,
@@ -46,15 +192,28 @@ def get_segments(source_code, language):
 
 # Python segmentation
 def segment_python_code(source_code):
+    # Capture imports, global variables, classes, functions, and the main block
     segments = {
         "Imports": '\n'.join(re.findall(r'^\s*(import.*|from.*import.*)', source_code, flags=re.MULTILINE)),
+
         "Global Variables": '\n'.join(re.findall(r'^(?!.*def|.*class|if __name__|^\s*import|from.*import)(.*=.*)', source_code, flags=re.MULTILINE)),
-        "Classes": re.findall(r'^\s*class\s+[\w]+\s*.*?:\s*[\s\S]+?(?=^\s*def\s+|^\s*class\s+|^\s*$)', source_code, flags=re.MULTILINE),
-        "Functions": re.findall(r'^\s*def\s+[\w]+\s*.*?:\s*[\s\S]+?(?=^\s*def\s+|^\s*class\s+|^\s*$)', source_code, flags=re.MULTILINE),
+
+        "Classes": re.findall(r'^\s*class\s+\w+\s*.*?:\s*(?:[\s\S]+?(?=^\s*class\s+|^\s*$))', source_code, flags=re.MULTILINE),
+
+        "Functions": re.findall(r'^\s*def\s+[\w]+\s*\(.*?\):\s*(?:[\s\S]+?(?=^\s*def\s+|^\s*class\s+|^\s*$))', source_code, flags=re.MULTILINE),
+
         "Main Block": '\n'.join(re.findall(r'if __name__ == ["\']__main__["\']:\s*([\s\S]+)', source_code)),
     }
-    return segments
 
+    # Now we handle methods inside classes
+    class_methods = {}
+    for class_segment in segments["Classes"]:
+        class_name = re.findall(r'class\s+(\w+)', class_segment)[0]  # Get the class name
+        methods_in_class = re.findall(r'^\s*def\s+[\w]+\s*\(.*?\):\s*(?:[\s\S]+?(?=^\s*def\s+|^\s*$))', class_segment, flags=re.MULTILINE)
+        class_methods[class_name] = methods_in_class
+
+    # Return segments with class methods captured separately
+    return segments, class_methods
 
 # Java segmentation
 def segment_java_code(source_code):
@@ -372,9 +531,54 @@ def segment_prolog_code(source_code):
 
 
 def segment_racket_code(source_code):
+    
     segments = {
         "Definitions": re.findall(r'^\s*\(define\s+\w+\s*.*\)', source_code, flags=re.MULTILINE),
         "Functions": re.findall(r'^\s*\(define\s+\(\w+\s*.*\)\s*[\s\S]+?\)', source_code, flags=re.MULTILINE),
         "Modules": re.findall(r'^\s*\(module\s+\w+\s*[\s\S]+?\)', source_code, flags=re.MULTILINE),
     }
     return segments
+def extract_code_skeleton(source_code: str, language: str) -> str:
+    """
+    Extracts the skeleton structure (classes, methods, global variables) from the source code
+    using language-specific patterns.
+    
+    Args:
+        source_code (str): The source code to analyze.
+        language (str): The programming language of the source code (e.g., 'python', 'java').
+    
+    Returns:
+        str: The skeleton of the code.
+    """
+    skeleton = ""
+    
+    # Fetch patterns for the specific language
+    patterns = get_language_patterns(language)
+    
+    # Extract class definitions
+    if 'class' in patterns:
+        for class_pattern in patterns['class']:
+            classes = class_pattern.findall(source_code)
+            for class_name in classes:
+                skeleton += f"class {class_name} {{ ... }}\n"
+
+    # Extract method definitions
+    if 'method' in patterns:
+        for method_pattern in patterns['method']:
+            methods = method_pattern.findall(source_code)
+            for method_name in methods:
+                skeleton += f"def {method_name}(...): ...\n"
+    
+    # Extract global variable definitions
+    if 'variable' in patterns:
+        for variable_pattern in patterns['variable']:
+            variables = variable_pattern.findall(source_code)
+            for variable_name in variables:
+                skeleton += f"{variable_name} = ...\n"
+
+    return skeleton.strip()
+
+
+def get_language_patterns(language: str) -> Dict[str, List[re.Pattern]]:
+
+    return language_patterns.get(language.lower(), {})
