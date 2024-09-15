@@ -1,8 +1,9 @@
 import ollama
 import re
 
-def translate_with_ollama(name, segment, from_language, to_language, context):
+def translate_with_ollama(name, segment, from_language, to_language, context=None,selected_model=''):
     try:
+        print(selected_model)
         # Send the request to the Ollama API using the llama3.1 model
         if context:
             # If context is provided, include it in the prompt
@@ -36,7 +37,7 @@ def translate_with_ollama(name, segment, from_language, to_language, context):
             Please provide the {to_language} output:
             """
         response = ollama.chat(
-            model='llama3.1',
+            model=selected_model,
             messages=[
                     {"role": "system", "content": f"You are a code translator. Translate this segment of {from_language} code into {to_language}. Segment: {name}. Do not provide any explanations just provide the code."},
                     {"role": "user", "content": prompt}

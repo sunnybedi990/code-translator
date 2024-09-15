@@ -2,7 +2,7 @@ import os
 import requests
 import re
 
-def translate_with_custom(name, segment, from_language, to_language, relevant_context):
+def translate_with_custom(name, segment, from_language, to_language, relevant_context=None,selected_model=''):
     # Fetch custom API details from environment variables or request
     CUSTOM_API_URL = os.getenv("CUSTOM_API_URL")
     CUSTOM_API_KEY = os.getenv("CUSTOM_API_KEY")  # If required

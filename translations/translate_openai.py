@@ -12,7 +12,7 @@ load_dotenv()
 client = OpenAI(
     api_key=os.environ.get("OPENAI_API_KEY"),
 )
-def translate_with_openai(name, segment, from_language, to_language,context=None):
+def translate_with_openai(name, segment, from_language, to_language,context=None,selected_model=None):
     try:
         # Prepare the translation prompt with relevant context
         if context:
@@ -47,7 +47,7 @@ def translate_with_openai(name, segment, from_language, to_language,context=None
             Please provide the {to_language} output:
             """
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model=selected_model,
             messages=[
                 {"role": "system", "content": f"You are a code translator. Translate this {from_language} code to {to_language}."},
                 {"role": "user", "content": prompt}

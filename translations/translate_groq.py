@@ -6,7 +6,7 @@ import re
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-def translate_with_groq(name, segment, from_language, to_language, context):
+def translate_with_groq(name, segment, from_language, to_language, context=None, selected_model=''):
     # Placeholder for Groq API integration
     # Replace with actual Groq API calls
     try:
@@ -42,7 +42,7 @@ def translate_with_groq(name, segment, from_language, to_language, context):
             Please provide the {to_language} output:
             """
         response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model=selected_model,
             messages=[
                     {"role": "system", "content": f"You are a code translator. Translate this segment of {from_language} code into {to_language}. Do not provide any explanations just provide the code."},
                     {"role": "user", "content": prompt}

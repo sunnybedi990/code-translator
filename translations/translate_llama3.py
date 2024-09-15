@@ -12,8 +12,15 @@ pipeline = transformers.pipeline(
     device_map="auto"
 )
 
-def translate_with_llama3(name, segment, from_language, to_language, context):
+def translate_with_llama3(name, segment, from_language, to_language, context=None,selected_model=''):
     try:
+        model_id = f"meta-llama/{selected_model}"
+        pipeline = transformers.pipeline(
+        "text-generation", 
+        model=model_id, 
+        model_kwargs={"torch_dtype": torch.bfloat16}, 
+        device_map="auto"
+        )
         if context:
             # If context is provided, include it in the prompt
             prompt = f"""
